@@ -8,7 +8,7 @@ public class TurnManager : MonoBehaviour
 
     private int currentPlayerIndex = 0;
     private int currentRound = 1;
-    private const int MAX_ROUND = 40; // 40回合上限
+    public int MaxRound = 40; // 40回合上限
 
     private bool isWaitingForPlayerInput = false; // 临时变量，用于Day 1监听空格键
 
@@ -34,7 +34,7 @@ public class TurnManager : MonoBehaviour
     {
         Debug.Log("======== 游戏开始 ========");
 
-        while (currentRound <= MAX_ROUND && GetAlivePlayerCount() > 1)
+        while (currentRound <= MaxRound && GetAlivePlayerCount() > 1)
         {
             PlayerController currentPlayer = players[currentPlayerIndex];
 
@@ -54,8 +54,22 @@ public class TurnManager : MonoBehaviour
             }
         }
 
+        // 游戏结束结算
         Debug.Log("======== 游戏结束 ========");
-        // TODO: 结算胜负逻辑
+        if (GetAlivePlayerCount() == 1)
+        {
+            // 结束方式1：只剩一个人
+            foreach (var p in players)
+            {
+                if (p.state != PlayerState.Dead)
+                    Debug.Log($"恭喜【{p.playerName}】熬死了所有人，获得最终胜利！");
+            }
+        }
+        else
+        {
+            // 结束方式2：回合数达到上限
+            Debug.Log($"{MaxRound}回合已到！根据总资产结算排名（待开发...）");
+        }
     }
 
     /// <summary>
@@ -75,10 +89,12 @@ public class TurnManager : MonoBehaviour
             player.stamina -= 1;
             Debug.Log($"{player.playerName} 消耗了 1 点体力。剩余体力：{player.stamina}");
 
+            // 玩家死亡判定
             if (player.stamina < 0)
             {
                 Debug.Log($"【死亡】{player.playerName} 体力耗尽，被淘汰！");
                 player.state = PlayerState.Dead;
+                player.Die();
                 yield break; // 立即结束当前协程
             }
         }
@@ -100,16 +116,13 @@ public class TurnManager : MonoBehaviour
 
         // 【第三步：角色移动】
         player.isActionDone = false;
-        int targetGridIndex = MapManager.Instance.GetTargetGridIndex(player.currentGridIndex, diceResult);
-
-        // 调用玩家的移动方法，等待其 isActionDone 变为 true
-        player.MoveToGrid(targetGridIndex);
+        player.MoveSteps(diceResult);
         yield return new WaitUntil(() => player.isActionDone);
 
 
         // 【第四步：格子结算与操作】
         player.isActionDone = false;
-        Debug.Log($"触发格子 [{targetGridIndex}] 的事件... 等待玩家操作 (按空格模拟操作完毕)");
+        Debug.Log($"触发格子 [{player.currentGridIndex}] 的事件... 等待玩家操作 (按空格模拟操作完毕)");
 
         // 模拟等待玩家点击"吃饭/升级/取消"
         if (!player.isAI)

@@ -523,6 +523,7 @@ MonoBehaviour:
   - {fileID: 637367344}
   - {fileID: 1859799539}
   - {fileID: 493374531}
+  MaxRound: 40
 --- !u!4 &912098600
 Transform:
   m_ObjectHideFlags: 0

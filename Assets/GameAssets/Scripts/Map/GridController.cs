@@ -5,7 +5,21 @@
 /// </summary>
 public class GridController : MonoBehaviour
 {
-    public int gridIndex; // 格子在地图列表中的序号
+    public int GridIndex => MapManager.Instance.GetGridIndex(this);// 格子在地图列表中的序号
 
-    // 后续可以在这里扩展：格子类型（起点、白格、红格、黄格）
+    /// <summary>
+    /// 玩家经过该格子时触发
+    /// </summary>
+    public virtual void OnPassed(PlayerController player)
+    {
+        // 基类默认无操作，留给子类重写
+    }
+
+    /// <summary>
+    /// 玩家最终停在该格子时触发
+    /// </summary>
+    public virtual void OnArrived(PlayerController player)
+    {
+        // 基类默认无操作，留给子类重写
+    }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -8,6 +9,10 @@ public class MapManager : MonoBehaviour
 {
     // 单例
     public static MapManager Instance { get; private set; }
+
+    [Header("地图数据")]
+    // 存储环形地图所有格子的列表
+    public List<GridController> gridList = new List<GridController>();
 
     private void Awake()
     {
@@ -21,11 +26,42 @@ public class MapManager : MonoBehaviour
             Debug.LogWarning("场景中存在多个MapManager，已销毁多余的实例。");
             Destroy(gameObject);
         }
+
+        // 注册监听器
+        EventManager.Instance.AddListener(EventName.OnPlayerPassedGrid, OnPlayerPassedGridHandler);
+        EventManager.Instance.AddListener(EventName.OnPlayerArrivedGrid, OnPlayerArrivedGridHandler);
     }
 
-    [Header("地图数据")]
-    // 存储环形地图所有格子的列表
-    public List<GridController> gridList = new List<GridController>();
+    private void OnDestroy()
+    {
+        // 移除监听器
+        if (EventManager.Instance != null)
+        {
+            EventManager.Instance.RemoveListener(EventName.OnPlayerPassedGrid, OnPlayerPassedGridHandler);
+            EventManager.Instance.RemoveListener(EventName.OnPlayerArrivedGrid, OnPlayerArrivedGridHandler);
+        }
+    }
+
+    // 事件处理逻辑
+    private void OnPlayerPassedGridHandler(object sender, EventArgs e)
+    {
+        var args = e as GridInteractionEventArgs;
+        if (args != null && args.gridIndex < gridList.Count)
+        {
+            // 调用对应格子的经过方法
+            gridList[args.gridIndex].OnPassed(args.player);
+        }
+    }
+
+    private void OnPlayerArrivedGridHandler(object sender, EventArgs e)
+    {
+        var args = e as GridInteractionEventArgs;
+        if (args != null && args.gridIndex < gridList.Count)
+        {
+            // 调用对应格子的到达方法
+            gridList[args.gridIndex].OnArrived(args.player);
+        }
+    }
 
     /// <summary>
     /// 获取移动后的目标格子索引
@@ -52,5 +88,13 @@ public class MapManager : MonoBehaviour
         }
         Debug.LogError($"获取格子坐标失败，索引越界: {index}");
         return Vector3.zero;
+    }
+
+    /// <summary>
+    /// 获得特定格子的索引
+    /// </summary>
+    public int GetGridIndex(GridController grid)
+    {
+        return gridList.IndexOf(grid);
     }
 }

@@ -8,6 +8,13 @@ public class PlayerController : MonoBehaviour
     public string playerName;
     public bool isAI;
     public int startGridIndex = 0; // 起点索引
+    public CharacterRole role = CharacterRole.Boy; // 角色职业
+
+    [Header("角色特性数值配置")]
+    public float girlDiscount = 0.8f;      // 女孩打折系数
+    public int fatManExtraHeal = 1;        // 大胃袋额外恢复量
+    public int oldLadyImmuneMaxCount = 2;  // 老奶奶免死次数
+    public int oldLadyImmuneBonus = 50;    // 老奶奶免死奖励
 
     [Header("初始数值")]
     public int initialStamina = 5;
@@ -26,9 +33,11 @@ public class PlayerController : MonoBehaviour
     private PlayerState currentState;
     private int currentGridIndex;
     private int currentMiningTurnsLeft;
+    private int currentImmuneCount; // 当前剩余免死次数
 
     // 核心控制标志位
     [HideInInspector] public bool isActionDone = false; // 用于告诉主协程某阶段动作做完了
+    [HideInInspector] public bool skipNextTurn = false; // 是否跳过回合
 
     private void Start()
     {
@@ -37,6 +46,7 @@ public class PlayerController : MonoBehaviour
         currentMoney = initialMoney;
         currentState = initialState;
         currentMiningTurnsLeft = 0;
+        currentImmuneCount = oldLadyImmuneMaxCount;
         TeleportToGrid(startGridIndex);
     }
 
@@ -57,6 +67,8 @@ public class PlayerController : MonoBehaviour
 
     public void SetMoney(int value)
     {
+        // 消费音效
+        if (value < currentMoney) this.TriggerEvent(EventName.PlaySFX, new SFXEventArgs { sfxType = SoundEffectType.Consume });
         // 限制金币最小为0
         currentMoney = Mathf.Max(0, value);
         // 触发金币改变事件
@@ -71,7 +83,7 @@ public class PlayerController : MonoBehaviour
     }
     #endregion
 
-    #region 资源消耗逻辑拓展
+    #region 资源消耗逻辑
     /// <summary>
     /// 回合开始时的体力消耗
     /// </summary>
@@ -81,20 +93,41 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// 自主消费
+    /// 消费
     /// </summary>
     /// <returns>true 表示购买成功，false 表示钱不够</returns>
     public bool SpendMoney(int amount)
     {
-        // TODO:可在此处根据角色类型（如年轻女孩）修改 amount 的值
-        int finalCost = amount;
-
-        if (currentMoney >= finalCost)
+        if (currentMoney >= amount)
         {
-            SetMoney(currentMoney - finalCost);
+            SetMoney(currentMoney - amount);
             return true;
         }
         return false;
+    }
+    #endregion
+
+    #region 角色特性核心逻辑
+    /// <summary>
+    /// 获取折后真实价格
+    /// </summary>
+    public int GetActualCost(int originalCost)
+    {
+        if (role == CharacterRole.Girl)
+            return Mathf.FloorToInt(originalCost * girlDiscount);
+        return originalCost;
+    }
+
+    /// <summary>
+    /// 恢复体力
+    /// </summary>
+    public void RecoverStamina(int amount)
+    {
+        if (amount > 0 && role == CharacterRole.FatMan)
+        {
+            amount += fatManExtraHeal;
+        }
+        SetStamina(currentStamina + amount);
     }
     #endregion
 
@@ -104,8 +137,22 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     public void EnterMiningState()
     {
+        if (role == CharacterRole.OldLady && currentImmuneCount > 0)
+        {
+            currentImmuneCount--;
+            SetMoney(currentMoney + oldLadyImmuneBonus);
+
+            PopupManager.Instance.ShowPopup("老奶奶的免死金牌",
+                $" {playerName} 触发抗风险天赋！免除本次破产/挖煤惩罚，并获得 {oldLadyImmuneBonus} 救济金！\n(剩余免死次数：{currentImmuneCount})",
+                null, null, "还有老资历");
+            return; // 直接 return，不进入挖煤
+        }
+
+        // 正常的挖煤逻辑
         SetState(PlayerState.Mining);
         currentMiningTurnsLeft = miningTotalTurns;
+
+        this.TriggerEvent(EventName.PlaySFX, new SFXEventArgs { sfxType = SoundEffectType.Mining }); // 挖煤音效
 
         // 进入瞬间扣1点体力
         DecreaseStamina();
@@ -163,6 +210,9 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     private IEnumerator MoveStepByStepCoroutine(int steps)
     {
+        // 触发移动音效
+        this.TriggerEvent(EventName.PlaySFX, new SFXEventArgs { sfxType = SoundEffectType.PlayerMove });
+
         for (int i = 0; i < steps; i++)
         {
             // 计算下一格的索引
@@ -189,7 +239,8 @@ public class PlayerController : MonoBehaviour
             this.TriggerEvent(EventName.OnPlayerPassedGrid, passArgs);
         }
 
-        Debug.Log($"【{playerName}】移动结束，停在了格子 [{currentGridIndex}]");
+        // 停止播放移动音效
+        this.TriggerEvent(EventName.StopMoveSFX);
 
         // 全部走完，触发“到达”事件
         var arriveArgs = new GridInteractionEventArgs { gridIndex = currentGridIndex, player = this };
@@ -213,6 +264,7 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     public void Die()
     {
+        this.TriggerEvent(EventName.PlaySFX, new SFXEventArgs { sfxType = SoundEffectType.Death }); // 死亡音效
         SetState(PlayerState.Dead);
         // 极简表现：隐藏模型
         gameObject.SetActive(false);

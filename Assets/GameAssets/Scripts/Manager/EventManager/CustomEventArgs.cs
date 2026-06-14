@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 // ======== 储存事件参数类 ========
 
@@ -12,4 +13,19 @@ public class GridInteractionEventArgs : EventArgs
 {
     public int gridIndex;
     public PlayerController player;
+}
+
+public class MusicEventArgs : EventArgs
+{
+    public MusicType musicType;
+}
+
+public class SFXEventArgs : EventArgs
+{
+    public SoundEffectType sfxType;
+}
+
+public class CameraTargetEventArgs : EventArgs
+{
+    public Transform targetTransform;
 }

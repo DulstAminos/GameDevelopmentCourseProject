@@ -24,6 +24,7 @@ public class PlayUIManager : MonoBehaviour
 
     private PlayerController activePlayer; // 当前正在操作的玩家
     private RestaurantGrid activeGrid;     // 玩家当前脚下的格子是否是饭店格
+    private bool hasBuiltOrUpgradedThisTurn = false; // 当前回合是否已建造或升级
 
     private void Awake()
     {
@@ -78,13 +79,12 @@ public class PlayUIManager : MonoBehaviour
             string typeStr = p.isAI ? "AI" : "你";
             string stateStr = GetStateString(p);
 
-            // 组装格式：[1] 你 张三 | 💰: 200 | 🍗: 5 | 状态: 正常
             playerInfoTexts[i].text = $"[{i + 1}] {typeStr} {p.playerName} | 金钱:{p.GetMoney()} | 体力:{p.GetStamina()} | 状态: {stateStr}";
 
             // 可以给当前回合的玩家文字加粗或换颜色标识
             if (i == tm.CurrentPlayerIndex)
             {
-                playerInfoTexts[i].text = "<color=#FFFF00>▶ " + playerInfoTexts[i].text + "</color>";
+                playerInfoTexts[i].text = "<color=#FFFF00>=> " + playerInfoTexts[i].text + "</color>";
             }
         }
     }
@@ -121,38 +121,50 @@ public class PlayUIManager : MonoBehaviour
         endActionBtn.gameObject.SetActive(isActive);
     }
 
-    /// <summary>
-    /// TurnManager会在第四步调用这个方法，开放操作权限
-    /// </summary>
+    // TurnManager会在第四步调用这个方法，开放操作权限
     public void EnablePlayerActions(PlayerController player, GridController currentGrid)
     {
         activePlayer = player;
         activeGrid = currentGrid as RestaurantGrid; // 尝试转型为饭店格
 
+        hasBuiltOrUpgradedThisTurn = false; // 新回合开始，重置建造限制标记
+
         SetActionButtonsActive(true);
 
-        // 重置所有按钮可点击状态，后续根据逻辑判断是否禁用
+        RefreshActionButtons();
+    }
+
+    /// <summary>
+    /// 统一评估四个按钮当前是否可点击，每次操作后都应调用
+    /// </summary>
+    private void RefreshActionButtons()
+    {
         buildBtn.interactable = false;
         upgradeBtn.interactable = false;
         consumeBtn.interactable = false;
-        endActionBtn.interactable = true; // 结束按钮永远可用
+        endActionBtn.interactable = true; // 结束按钮始终可用
 
         if (activeGrid != null)
         {
-            if (activeGrid.level == 0)
+            // 1. 建造判断
+            if (activeGrid.level == 0 && !hasBuiltOrUpgradedThisTurn)
             {
-                // 空地：可以建造 (造价写死100)
-                buildBtn.interactable = activePlayer.GetMoney() >= 100;
+                buildBtn.interactable = activePlayer.GetMoney() >= activePlayer.GetActualCost(activeGrid.buildCost);
             }
-            else if (activeGrid.owner == activePlayer)
+            // 2. 升级判断 (只能升自己的)
+            else if (activeGrid.owner == activePlayer && activeGrid.level > 0 && activeGrid.level < 3 && !hasBuiltOrUpgradedThisTurn)
             {
-                // 自己饭店：可以升级或消费
-                // (根据GDD，1级升2级需200，2级升3级需350，吃饭费用暂定为对应等级的过路费+30)
-                int upgradeCost = activeGrid.level == 1 ? 200 : (activeGrid.level == 2 ? 350 : 9999);
-                if (activeGrid.level < 3) upgradeBtn.interactable = activePlayer.GetMoney() >= upgradeCost;
+                int upCost = activeGrid.upgradeCosts[activeGrid.level - 1];
+                upgradeBtn.interactable = activePlayer.GetMoney() >= activePlayer.GetActualCost(upCost);
+            }
 
-                int consumeCost = activeGrid.level == 1 ? 50 : (activeGrid.level == 2 ? 80 : 120);
-                consumeBtn.interactable = activePlayer.GetMoney() >= consumeCost && activePlayer.GetStamina() < activePlayer.maxStamina;
+            // 3. 消费判断 (所有饭店都能吃)
+            if (activeGrid.level > 0 && activePlayer.GetStamina() < activePlayer.maxStamina)
+            {
+                int baseCost = activeGrid.consumeCosts[activeGrid.level - 1];
+                int finalCost = activeGrid.owner == activePlayer ? Mathf.FloorToInt(baseCost * activeGrid.ownerDiscount) : baseCost;
+
+                consumeBtn.interactable = activePlayer.GetMoney() >= activePlayer.GetActualCost(finalCost);
             }
         }
     }
@@ -160,36 +172,32 @@ public class PlayUIManager : MonoBehaviour
     #region 按钮点击响应逻辑
     private void OnBuildBtnClicked()
     {
-        int cost = 100;
-        // 弹出二次确认框
-        PopupManager.Instance.ShowPopup("建造饭店", $"是否花费 {cost} 金币在此空地建造 1 级饭店？",
+        int cost = activePlayer.GetActualCost(activeGrid.buildCost);
+        PopupManager.Instance.ShowPopup("建造饭店", $"是否花费 {cost} 金币买下这块地，并建造 1 级 {activeGrid.restaurantName} ？",
             onConfirm: () =>
             {
                 if (activePlayer.SpendMoney(cost))
                 {
                     activeGrid.UpgradeOrBuild(activePlayer);
-                    Debug.Log("建造成功！");
-                    // 操作完一次后，禁用该按钮防止连点，或直接强制结束回合操作
-                    SetActionButtonsActive(false);
-                    activePlayer.FinishGridAction(); // 关键：释放协程卡点！
+                    hasBuiltOrUpgradedThisTurn = true; // 标记本回合已建造
+                    RefreshActionButtons(); // 刷新按钮状态
                 }
             },
-            onCancel: () => { /* 取消不做任何事 */ }
+            onCancel: () => { }
         );
     }
 
     private void OnUpgradeBtnClicked()
     {
-        int cost = activeGrid.level == 1 ? 200 : 350;
-        PopupManager.Instance.ShowPopup("升级饭店", $"是否花费 {cost} 金币将饭店升至 {activeGrid.level + 1} 级？",
+        int cost = activePlayer.GetActualCost(activeGrid.upgradeCosts[activeGrid.level - 1]);
+        PopupManager.Instance.ShowPopup("升级饭店", $"是否花费 {cost} 金币将 {activeGrid.restaurantName} 升至 {activeGrid.level + 1} 级？",
             onConfirm: () =>
             {
                 if (activePlayer.SpendMoney(cost))
                 {
                     activeGrid.UpgradeOrBuild(activePlayer);
-                    Debug.Log("升级成功！");
-                    SetActionButtonsActive(false);
-                    activePlayer.FinishGridAction();
+                    hasBuiltOrUpgradedThisTurn = true; // 标记本回合已升级
+                    RefreshActionButtons();
                 }
             },
             onCancel: () => { }
@@ -198,18 +206,28 @@ public class PlayUIManager : MonoBehaviour
 
     private void OnConsumeBtnClicked()
     {
-        int cost = activeGrid.level == 1 ? 50 : (activeGrid.level == 2 ? 80 : 120);
-        int staminaRecover = activeGrid.level == 1 ? 2 : (activeGrid.level == 2 ? 3 : 4);
+        bool isMyRestaurant = (activeGrid.owner == activePlayer);
+        int baseCost = activeGrid.consumeCosts[activeGrid.level - 1];
+        int finalCost = activePlayer.GetActualCost(isMyRestaurant ? Mathf.FloorToInt(baseCost * activeGrid.ownerDiscount) : baseCost);
+        int staminaRecover = activeGrid.staminaRecovers[activeGrid.level - 1];
 
-        PopupManager.Instance.ShowPopup("吃大餐", $"是否花费 {cost} 金币吃顿好的？\n将恢复 {staminaRecover} 点体力。",
+        string ownerStr = activeGrid.owner == null ? "中立的" : (isMyRestaurant ? "你自己的" : $"{activeGrid.owner.playerName} 的");
+
+        string contentMsg = $"是否在 {ownerStr} {activeGrid.restaurantName} 花费 {finalCost} 金币享用 {activeGrid.foodName} ？\n(恢复 {staminaRecover} 点体力)";
+
+        if (isMyRestaurant)
+        {
+            contentMsg += $"\n<color=#32CD32> 房主特权：享受 {activeGrid.ownerDiscount * 10} 折优惠！(原价 {baseCost})</color>";
+        }
+
+        PopupManager.Instance.ShowPopup("吃大餐", contentMsg,
             onConfirm: () =>
             {
-                if (activePlayer.SpendMoney(cost))
+                if (activePlayer.SpendMoney(finalCost))
                 {
-                    activePlayer.SetStamina(activePlayer.GetStamina() + staminaRecover);
-                    Debug.Log("消费成功，体力恢复！");
-                    SetActionButtonsActive(false);
-                    activePlayer.FinishGridAction();
+                    if (!isMyRestaurant) activeGrid.OwnerMakeMoney(finalCost);
+                    activePlayer.RecoverStamina(staminaRecover);
+                    RefreshActionButtons();
                 }
             },
             onCancel: () => { }

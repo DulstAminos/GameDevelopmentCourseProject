@@ -91,48 +91,48 @@ public class RandomEventManager : MonoBehaviour
 
             case RandomEventType.Treasure:
                 player.SetMoney(player.GetMoney() + 100);
-                content = "你在路边捡到了一个钱包！\n立刻获得 100 金币！";
-                PopupManager.Instance.ShowPopup(title, content, onComplete, null, "太爽了");
+                content = $"{player.playerName} 在路边捡到了一个钱包！\n立刻获得 100 金币！";
+                PopupManager.Instance.ShowPopup(title, content, onComplete, null, "这么强");
                 break;
 
             case RandomEventType.Thief:
                 int lost = Mathf.Min(player.GetMoney(), 50); // 最多扣到0
                 player.SetMoney(player.GetMoney() - lost);
-                content = $"你遇到了一群强盗！\n失去了 {lost} 金币。";
-                PopupManager.Instance.ShowPopup(title, content, onComplete, null, "倒霉");
+                content = $"{player.playerName} 遇到了一群强盗！\n失去了 {lost} 金币。";
+                PopupManager.Instance.ShowPopup(title, content, onComplete, null, "太倒霉了");
                 break;
 
             case RandomEventType.Resident:
                 player.RecoverStamina(1);
-                content = "热心大妈给了你一个包子！\n恢复 1 点体力。";
-                PopupManager.Instance.ShowPopup(title, content, onComplete, null, "谢谢大妈");
+                content = $"热心大妈给了 {player.playerName} 一个包子！\n恢复 1 点体力。";
+                PopupManager.Instance.ShowPopup(title, content, onComplete, null, "不赖");
                 break;
 
             case RandomEventType.Fall:
                 player.SetStamina(player.GetStamina() - 2);
-                content = "你不小心掉进了下水道！\n失去 2 点体力。";
+                content = $"{player.playerName} 不小心掉进了下水道！\n失去 2 点体力。";
                 PopupManager.Instance.ShowPopup(title, content, () =>
                 {
                     if (player.GetStamina() <= 0) player.Die();
                     onComplete?.Invoke();
-                }, null, "好痛");
+                }, null, "惨");
                 break;
 
             case RandomEventType.Overtime:
                 player.SetMoney(player.GetMoney() + 50);
                 player.SetStamina(player.GetStamina() - 1);
-                content = "老板强制你回去加了会儿班！\n获得 50 金币，但失去 1 点体力。";
+                content = $"老板强制 {player.playerName} 回去加了会儿班！\n获得 50 金币，但失去 1 点体力。";
                 PopupManager.Instance.ShowPopup(title, content, () =>
                 {
                     if (player.GetStamina() <= 0) player.Die();
                     onComplete?.Invoke();
-                }, null, "打工人");
+                }, null, "Go Work!");
                 break;
 
             case RandomEventType.BrokenLeg:
                 player.skipNextTurn = true;
-                content = "走路玩手机撞树上了！\n强制跳过下一个回合。";
-                PopupManager.Instance.ShowPopup(title, content, onComplete, null, "呜呜");
+                content = $"{player.playerName} 走路玩手机撞树上了！\n强制跳过下一个回合。";
+                PopupManager.Instance.ShowPopup(title, content, onComplete, null, "那很坏了");
                 break;
 
             case RandomEventType.Windfall:
@@ -148,19 +148,19 @@ public class RandomEventManager : MonoBehaviour
                     }
                 }
                 player.SetMoney(player.GetMoney() + totalStolen);
-                content = $"一阵大风刮来了别人的私房钱！\n其他人各损失最多 20 金币，你总共获得了 {totalStolen} 金币！";
-                PopupManager.Instance.ShowPopup(title, content, onComplete, null, "赚翻了");
+                content = $"一阵大风刮来了别人的私房钱！\n其他人各损失最多 20 金币，{player.playerName} 总共获得了 {totalStolen} 金币！";
+                PopupManager.Instance.ShowPopup(title, content, onComplete, null, "开了？");
                 break;
 
             case RandomEventType.Disaster:
-                content = "一辆失控的泥头车把你撞飞到了最近的煤矿！";
+                content = $"一辆失控的泥头车把 {player.playerName} 撞飞到了最近的煤矿！";
                 PopupManager.Instance.ShowPopup(title, content, () =>
                 {
                     // 传送到最近煤矿的逻辑
                     int nearestCoal = FindNearestCoalIndex(player.GetCurrentGridIndex());
                     player.TeleportToGrid(nearestCoal);
                     onComplete?.Invoke();
-                }, null, "天降横祸");
+                }, null, "撞大运了");
                 break;
         }
     }

@@ -119,7 +119,7 @@ public class TurnManager : MonoBehaviour
         if (player.skipNextTurn)
         {
             player.skipNextTurn = false;
-            PopupManager.Instance.ShowPopup("养伤中", $"【{player.playerName}】正在骨科医院躺着，跳过本回合。", null, null, "同情");
+            PopupManager.Instance.ShowPopup("跳过回合", $"【{player.playerName}】跳过本回合。", null, null, "知道了");
             yield return new WaitForSeconds(1.5f); // 停顿一下让弹窗显示
             PopupManager.Instance.popupPanel.SetActive(false);
             yield break;
@@ -186,8 +186,9 @@ public class TurnManager : MonoBehaviour
         else
         {
             RestaurantGrid rGrid = currentGrid as RestaurantGrid;
+            StartGrid sGrid = currentGrid as StartGrid;
             // 触发随机事件
-            if (rGrid != null && rGrid.level == 0)
+            if (sGrid != null || (rGrid != null && rGrid.level == 0))
             {
                 bool isEventFinished = false;
                 // 触发随机事件，挂起协程直到玩家关掉事件弹窗
@@ -222,9 +223,11 @@ public class TurnManager : MonoBehaviour
 
         // 【第五步：回合结束】
         Debug.Log($"{player.playerName} 的回合结束。");
+        yield return new WaitForSeconds(0.8f);
     }
 
     #region 掷骰子相关逻辑
+    // 投骰子按钮绑定逻辑
     private void BindDiceEvent()
     {
         PlayUIManager.Instance.diceBtn.interactable = true;
@@ -239,12 +242,20 @@ public class TurnManager : MonoBehaviour
         PlayUIManager.Instance.diceBtn.onClick.AddListener(btnAction);
     }
 
-
+    // 骰子表现层相关具体逻辑
     private void RollDice(int result)
     {
-        this.TriggerEvent(EventName.PlaySFX, new SFXEventArgs { sfxType = SoundEffectType.RollDice });
         diceResult = result;
-        isDiceRolled = true; // 释放第二步的卡点
+        // 投骰子音效
+        this.TriggerEvent(EventName.PlaySFX, new SFXEventArgs { sfxType = SoundEffectType.RollDice });
+        // 触发骰子3D动画事件
+        this.TriggerEvent(EventName.ShowDiceAnimation, new DiceAnimationEventArgs { result = result });
+    }
+
+    // 释放投骰子卡点公开的方法
+    public void SetDiceRolled()
+    {
+        isDiceRolled = true;
     }
     #endregion
 
@@ -255,7 +266,7 @@ public class TurnManager : MonoBehaviour
         if (rGrid != null)
         {
             // 操作阶段 1：如果在任何饭店且体力低，优先补充体力
-            while (rGrid.level > 0 && player.GetStamina() <= aiStaminaDangerLevel && player.GetStamina() < player.maxStamina)
+            while (rGrid.level > 0 && rGrid.staminaRecovers[rGrid.level - 1] > 0 && player.GetStamina() <= aiStaminaDangerLevel && player.GetStamina() < player.maxStamina)
             {
                 bool isMy = (rGrid.owner == player);
                 int baseCost = rGrid.consumeCosts[rGrid.level - 1];

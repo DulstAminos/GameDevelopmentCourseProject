@@ -18,14 +18,63 @@ public class RestaurantGrid : GridController
     public int[] staminaRecovers = new int[] { 2, 3, 4 };  // 吃饭恢复体力
     [Range(0f, 1f)] public float ownerDiscount = 0.5f; // 默认5折
 
-    [Header("视觉表现")]
+    [Header("格子视觉表现")]
     public MeshRenderer modelRenderer;    // 子物体的 MeshRenderer
     public Material emptyMaterial;        // 空白格材质
-    public Material levelMaterial;     // 饭店材质
+    public Material levelMaterial;     // 饭店格材质
+
+    [Header("建筑、食物模型与点位配置")]
+    public GameObject buildingPrefab;     // 饭店建筑模型/预制体
+    public GameObject foodPrefab;         // 食物模型/预制体
+    public Transform[] spawnPoints;       // 4个候选生成点位 (前后左右)
+    [Tooltip("选择哪个点位生成建筑")]
+    public int selectedSpawnIndex = 0;
+    [Tooltip("食物模型在生成点位上方的高度偏移")]
+    public float foodHeightOffset = 2.0f;
+
+    // 内部引用的已实例化物体
+    private GameObject spawnedBuilding;
+    private GameObject spawnedFood;
+
+    private void Awake()
+    {
+        // 实例化模型
+        InstantiateModels();
+    }
 
     private void Start()
     {
-        UpdateVisual(); // 开局初始化材质
+        // 开局初始化材质
+        UpdateVisual();
+    }
+
+    /// <summary>
+    /// 初始化时生成建筑和食物模型
+    /// </summary>
+    private void InstantiateModels()
+    {
+        if (spawnPoints == null || spawnPoints.Length == 0 || selectedSpawnIndex >= spawnPoints.Length)
+        {
+            Debug.LogWarning($"{gameObject.name} 的模型生成点位配置有误！");
+            return;
+        }
+
+        Transform spawnPoint = spawnPoints[selectedSpawnIndex];
+
+        // 实例化建筑
+        if (buildingPrefab != null)
+        {
+            spawnedBuilding = Instantiate(buildingPrefab, spawnPoint.position, spawnPoint.rotation, this.transform);
+            spawnedBuilding.SetActive(level > 0);
+        }
+
+        // 实例化食物
+        if (foodPrefab != null)
+        {
+            Vector3 foodPos = spawnPoint.position + Vector3.up * foodHeightOffset;
+            spawnedFood = Instantiate(foodPrefab, foodPos, spawnPoint.rotation, this.transform);
+            spawnedFood.SetActive(level > 0);
+        }
     }
 
     public override void OnArrived(PlayerController player)
@@ -33,7 +82,6 @@ public class RestaurantGrid : GridController
         if (level == 0)
         {
             Debug.Log($"【空地】{player.playerName} 停在了无主空地上。");
-            // 提示：你可以在这儿抛出事件触发随机事件，按照GDD我们放到以后做
         }
         else if (owner == null)
         {
@@ -93,17 +141,29 @@ public class RestaurantGrid : GridController
         owner.SetMoney(owner.GetMoney() + money);
     }
 
+    // 更新视觉表现
     private void UpdateVisual()
     {
-        if (modelRenderer == null) return;
-
-        if (level == 0)
+        // 更新格子材质
+        if (modelRenderer != null)
         {
-            modelRenderer.material = emptyMaterial;
+            if (level == 0)
+                modelRenderer.material = emptyMaterial;
+            else
+                modelRenderer.material = levelMaterial;
         }
-        else
+
+        // 更新建筑和食物模型的显隐
+        bool shouldShowModels = (level > 0);
+
+        if (spawnedBuilding != null)
         {
-            modelRenderer.material = levelMaterial;
+            spawnedBuilding.SetActive(shouldShowModels);
+        }
+
+        if (spawnedFood != null)
+        {
+            spawnedFood.SetActive(shouldShowModels);
         }
     }
 }

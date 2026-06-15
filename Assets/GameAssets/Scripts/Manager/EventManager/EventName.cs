@@ -24,4 +24,7 @@ public static class EventName
 
     // 摄像机切换跟随目标事件
     public const string OnCameraChangeTarget = nameof(OnCameraChangeTarget);
+
+    // 触发骰子动画
+    public const string ShowDiceAnimation = nameof(ShowDiceAnimation);
 }

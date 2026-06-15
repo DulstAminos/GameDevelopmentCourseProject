@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &3511162136306355591
+--- !u!1 &2136678219220776753
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,46 +8,45 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 913538064017350396}
-  - component: {fileID: 1435547901991357305}
-  - component: {fileID: 7268181172075564189}
-  - component: {fileID: 1088166435408230466}
+  - component: {fileID: 1651925139866496395}
+  - component: {fileID: 2396771232806117934}
+  - component: {fileID: 479631115009152740}
   m_Layer: 0
-  m_Name: Capsule
+  m_Name: boy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &913538064017350396
+--- !u!4 &1651925139866496395
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3511162136306355591}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.2, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_GameObject: {fileID: 2136678219220776753}
+  m_LocalRotation: {x: 0, y: 0.92387956, z: 0, w: 0.38268343}
+  m_LocalPosition: {x: -0.5, y: 0.15, z: 0.5}
+  m_LocalScale: {x: 160, y: 160, z: 160}
   m_Children: []
   m_Father: {fileID: 316508945273431013}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &1435547901991357305
+  m_LocalEulerAnglesHint: {x: 0, y: 135, z: 0}
+--- !u!33 &2396771232806117934
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3511162136306355591}
-  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &7268181172075564189
+  m_GameObject: {fileID: 2136678219220776753}
+  m_Mesh: {fileID: -3362887337151679087, guid: 2647da5112fe2904cb16f52d36d2421b, type: 3}
+--- !u!23 &479631115009152740
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3511162136306355591}
+  m_GameObject: {fileID: 2136678219220776753}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -60,7 +59,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: eb22b034960a20043b3c783349e406fa, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -82,20 +81,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &1088166435408230466
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3511162136306355591}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  m_Radius: 0.5
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &4246660128291613334
 GameObject:
   m_ObjectHideFlags: 0
@@ -124,7 +109,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 913538064017350396}
+  - {fileID: 1651925139866496395}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -140,7 +125,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a26c8776c5af3734b8fc3b9080b0743b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerName: "\u5E74\u8F7B\u7537\u5B69"
+  playerName: "\u4F53\u80B2\u751F"
   isAI: 0
   startGridIndex: 0
   role: 0
@@ -148,9 +133,9 @@ MonoBehaviour:
   fatManExtraHeal: 1
   oldLadyImmuneMaxCount: 2
   oldLadyImmuneBonus: 50
-  initialStamina: 7
-  maxStamina: 10
-  initialMoney: 200
+  initialStamina: 10
+  maxStamina: 15
+  initialMoney: 300
   initialState: 0
   miningTotalTurns: 2
   jumpPower: 1.5

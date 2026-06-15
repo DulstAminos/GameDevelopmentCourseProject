@@ -14,6 +14,7 @@ public class PlayUIManager : MonoBehaviour
     public List<TextMeshProUGUI> playerInfoTexts;
 
     [Header("底部操作栏 UI")]
+    public GameObject OperationPanel; // 操作面板
     public Button buildBtn;    // 建造
     public Button upgradeBtn;  // 升级
     public Button consumeBtn;  // 消费(吃饭)
@@ -37,8 +38,8 @@ public class PlayUIManager : MonoBehaviour
         EventManager.Instance.AddListener(EventName.OnPlayerStateChanged, RefreshPlayerUI);
         EventManager.Instance.AddListener(EventName.OnRoundOrTurnChanged, RefreshRoundUI);
 
-        // 默认禁用所有交互按钮，等待流程控制器TurnManager激活
-        SetActionButtonsActive(false);
+        // 默认禁用所有交互，等待流程控制器TurnManager激活
+        SetOperationActive(false);
         diceBtn.interactable = false;
     }
 
@@ -79,7 +80,7 @@ public class PlayUIManager : MonoBehaviour
             string typeStr = p.isAI ? "AI" : "你";
             string stateStr = GetStateString(p);
 
-            playerInfoTexts[i].text = $"[{i + 1}] {typeStr} {p.playerName} | 金钱:{p.GetMoney()} | 体力:{p.GetStamina()} | 状态: {stateStr}";
+            playerInfoTexts[i].text = $"[{i + 1}] {typeStr} {p.playerName}\n金钱:{p.GetMoney()} 体力:{p.GetStamina()}/{p.maxStamina}\n 状态: {stateStr}";
 
             // 可以给当前回合的玩家文字加粗或换颜色标识
             if (i == tm.CurrentPlayerIndex)
@@ -94,7 +95,7 @@ public class PlayUIManager : MonoBehaviour
         TurnManager tm = FindObjectOfType<TurnManager>();
         if (tm != null)
         {
-            roundInfoText.text = $"当前回合:\n{tm.CurrentRound} / 40";
+            roundInfoText.text = $"{tm.CurrentRound} / 40";
         }
         RefreshPlayerUI(null, null); // 切换回合时，也要刷新玩家信息
     }
@@ -111,14 +112,11 @@ public class PlayUIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 开关底部4个操作按钮的显示/隐藏状态
+    /// 开关操作面板的显示/隐藏状态
     /// </summary>
-    public void SetActionButtonsActive(bool isActive)
+    public void SetOperationActive(bool isActive)
     {
-        buildBtn.gameObject.SetActive(isActive);
-        upgradeBtn.gameObject.SetActive(isActive);
-        consumeBtn.gameObject.SetActive(isActive);
-        endActionBtn.gameObject.SetActive(isActive);
+        OperationPanel.gameObject.SetActive(isActive);
     }
 
     // TurnManager会在第四步调用这个方法，开放操作权限
@@ -129,7 +127,7 @@ public class PlayUIManager : MonoBehaviour
 
         hasBuiltOrUpgradedThisTurn = false; // 新回合开始，重置建造限制标记
 
-        SetActionButtonsActive(true);
+        SetOperationActive(true);
 
         RefreshActionButtons();
     }
@@ -213,14 +211,14 @@ public class PlayUIManager : MonoBehaviour
 
         string ownerStr = activeGrid.owner == null ? "中立的" : (isMyRestaurant ? "你自己的" : $"{activeGrid.owner.playerName} 的");
 
-        string contentMsg = $"是否在 {ownerStr} {activeGrid.restaurantName} 花费 {finalCost} 金币享用 {activeGrid.foodName} ？\n(恢复 {staminaRecover} 点体力)";
+        string contentMsg = $"是否在 {ownerStr} {activeGrid.restaurantName} 花费 {finalCost} 金币购买 {activeGrid.foodName} ？\n(恢复 {staminaRecover} 点体力)";
 
         if (isMyRestaurant)
         {
             contentMsg += $"\n<color=#32CD32> 房主特权：享受 {activeGrid.ownerDiscount * 10} 折优惠！(原价 {baseCost})</color>";
         }
 
-        PopupManager.Instance.ShowPopup("吃大餐", contentMsg,
+        PopupManager.Instance.ShowPopup("购买食物", contentMsg,
             onConfirm: () =>
             {
                 if (activePlayer.SpendMoney(finalCost))
@@ -237,7 +235,7 @@ public class PlayUIManager : MonoBehaviour
     private void OnEndActionBtnClicked()
     {
         // 直接结束该阶段
-        SetActionButtonsActive(false);
+        SetOperationActive(false);
         activePlayer.FinishGridAction();
     }
     #endregion

@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// 起点格控制器
+/// </summary>
 public class StartGrid : GridController
 {
     [Header("经过奖励")]

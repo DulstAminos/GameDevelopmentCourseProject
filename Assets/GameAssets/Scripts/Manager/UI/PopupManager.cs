@@ -3,6 +3,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// UI弹窗管理器
+/// </summary>
 public class PopupManager : MonoBehaviour
 {
     public static PopupManager Instance { get; private set; }

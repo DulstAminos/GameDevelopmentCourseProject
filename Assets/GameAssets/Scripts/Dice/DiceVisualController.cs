@@ -3,6 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 骰子动画控制器
+/// </summary>
 public class DiceVisualController : MonoBehaviour
 {
     [Header("模型引用")]

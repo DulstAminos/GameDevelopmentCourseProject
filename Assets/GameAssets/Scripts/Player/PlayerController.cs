@@ -2,6 +2,9 @@
 using System.Collections;
 using UnityEngine;
 
+/// <summary>
+/// 玩家控制器
+/// </summary>
 public class PlayerController : MonoBehaviour
 {
     [Header("基础属性")]
@@ -152,7 +155,8 @@ public class PlayerController : MonoBehaviour
         SetState(PlayerState.Mining);
         currentMiningTurnsLeft = miningTotalTurns;
 
-        this.TriggerEvent(EventName.PlaySFX, new SFXEventArgs { sfxType = SoundEffectType.Mining }); // 挖煤音效
+        // 挖煤音效
+        this.TriggerEvent(EventName.PlaySFX, new SFXEventArgs { sfxType = SoundEffectType.Mining });
 
         // 进入瞬间扣1点体力
         DecreaseStamina();
@@ -190,7 +194,6 @@ public class PlayerController : MonoBehaviour
     {
         currentGridIndex = index;
         transform.position = MapManager.Instance.GetGridPosition(index);
-        Debug.Log($"【{playerName}】瞬移到了格子 [{index}]");
 
         // 瞬间移动完成后，触发“到达”事件
         var args = new GridInteractionEventArgs { gridIndex = currentGridIndex, player = this };
@@ -219,7 +222,7 @@ public class PlayerController : MonoBehaviour
             int nextIndex = MapManager.Instance.GetTargetGridIndex(currentGridIndex, 1);
             Vector3 targetPos = MapManager.Instance.GetGridPosition(nextIndex);
 
-            // 执行跳跃动画 (目标点，跳跃力度，跳跃次数，持续时间)
+            // 执行跳跃动画
             bool isSingleJumpDone = false;
             transform.DOJump(targetPos, jumpPower, numJumps: 1, jumpDuration)
                 .SetEase(Ease.Linear)
@@ -250,25 +253,25 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// 模拟格子结算完成
+    /// 当前格子结算完成
     /// </summary>
     public void FinishGridAction()
     {
-        Debug.Log($"【{playerName}】完成了格子结算。");
         // 结算结束，释放协程卡点
         isActionDone = true;
     }
 
     /// <summary>
-    /// 死亡表现
+    /// 死亡逻辑
     /// </summary>
     public void Die()
     {
-        this.TriggerEvent(EventName.PlaySFX, new SFXEventArgs { sfxType = SoundEffectType.Death }); // 死亡音效
+        // 死亡音效
+        this.TriggerEvent(EventName.PlaySFX, new SFXEventArgs { sfxType = SoundEffectType.Death });
+        // 状态切换
         SetState(PlayerState.Dead);
         // 极简表现：隐藏模型
         gameObject.SetActive(false);
-        Debug.Log($"【死亡】{playerName} 体力耗尽，已从棋盘移除！");
     }
     #endregion
 }

@@ -3,6 +3,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// 游玩UI管理器
+/// </summary>
 public class PlayUIManager : MonoBehaviour
 {
     public static PlayUIManager Instance { get; private set; }
@@ -63,9 +66,18 @@ public class PlayUIManager : MonoBehaviour
         endActionBtn.onClick.AddListener(OnEndActionBtnClicked);
     }
 
-    /// <summary>
-    /// 刷新左侧所有玩家信息
-    /// </summary>
+    // 刷新回合显示UI
+    private void RefreshRoundUI(object sender, System.EventArgs e)
+    {
+        TurnManager tm = FindObjectOfType<TurnManager>();
+        if (tm != null)
+        {
+            roundInfoText.text = $"{tm.CurrentRound} / 40";
+        }
+        RefreshPlayerUI(null, null); // 切换回合时，也要刷新玩家信息
+    }
+
+    // 刷新左侧所有玩家信息
     private void RefreshPlayerUI(object sender, System.EventArgs e)
     {
         // 通过 TurnManager 获取玩家数据
@@ -90,16 +102,7 @@ public class PlayUIManager : MonoBehaviour
         }
     }
 
-    private void RefreshRoundUI(object sender, System.EventArgs e)
-    {
-        TurnManager tm = FindObjectOfType<TurnManager>();
-        if (tm != null)
-        {
-            roundInfoText.text = $"{tm.CurrentRound} / 40";
-        }
-        RefreshPlayerUI(null, null); // 切换回合时，也要刷新玩家信息
-    }
-
+    // 辅助函数：获取玩家状态
     private string GetStateString(PlayerController p)
     {
         switch (p.GetState())
@@ -119,7 +122,11 @@ public class PlayUIManager : MonoBehaviour
         OperationPanel.gameObject.SetActive(isActive);
     }
 
-    // TurnManager会在第四步调用这个方法，开放操作权限
+    /// <summary>
+    /// 开放操作权限
+    /// </summary>
+    /// <param name="player">当前玩家</param>
+    /// <param name="currentGrid">当前格</param>
     public void EnablePlayerActions(PlayerController player, GridController currentGrid)
     {
         activePlayer = player;
@@ -132,9 +139,7 @@ public class PlayUIManager : MonoBehaviour
         RefreshActionButtons();
     }
 
-    /// <summary>
-    /// 统一评估四个按钮当前是否可点击，每次操作后都应调用
-    /// </summary>
+    // 统一评估四个按钮当前是否可点击，每次操作后都应调用
     private void RefreshActionButtons()
     {
         buildBtn.interactable = false;

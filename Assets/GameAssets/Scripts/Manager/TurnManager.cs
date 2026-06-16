@@ -11,10 +11,10 @@ public class TurnManager : MonoBehaviour
 
     [Header("游戏配置")]
     public List<PlayerController> players;
-    public int MaxRound = 40; // 40回合上限
+    public int MaxRound = 40; // 回合上限
 
     [Header("AI 行为配置")]
-    public int aiReserveMoney = 50;           // AI 预留防身金钱
+    public int aiReserveMoney = 50;           // AI 预留金钱
     public int aiStaminaDangerLevel = 4;      // AI 认为危险的体力阈值
 
     [Header("结算 UI 组件")]
@@ -42,6 +42,7 @@ public class TurnManager : MonoBehaviour
     {
         // 触发播放游玩音乐
         this.TriggerEvent(EventName.PlayMusic, new MusicEventArgs { musicType = MusicType.Gameplay });
+
         // 根据GameData的数据，设置谁是玩家，谁是AI
         for (int i = 0; i < players.Count; i++)
         {
@@ -84,7 +85,6 @@ public class TurnManager : MonoBehaviour
                 yield return StartCoroutine(PlayerTurnRoutine(currentPlayer));
             }
 
-            // 换人逻辑
             currentPlayerIndex = (currentPlayerIndex + 1) % players.Count;
 
             // 如果又轮到第一个玩家，说明一圈结束，回合数+1
@@ -129,7 +129,6 @@ public class TurnManager : MonoBehaviour
         {
             // 挖煤状态处理逻辑
             player.ProcessMiningTurn();
-            Debug.Log($"{player.playerName} 正在挖煤禁足中...");
             yield break; // 强制结束该玩家本回合
         }
         else
@@ -143,14 +142,12 @@ public class TurnManager : MonoBehaviour
             }
             // 正常状态扣体力
             player.DecreaseStamina();
-            Debug.Log($"{player.playerName} 消耗了 1 点体力。剩余体力：{player.GetStamina()}");
         }
 
         // 【第二步：掷骰子】
         player.isActionDone = false;
         isDiceRolled = false;
 
-        // 模拟等待玩家点击UI
         if (player.isAI)
         {
             // AI 自动掷骰子
@@ -162,7 +159,7 @@ public class TurnManager : MonoBehaviour
             // 等待玩家点击投骰子按钮
             BindDiceEvent();
         }
-        // 挂起协程，等待 RollDice 方法被调用，isDiceRolled 变成 true
+        // 挂起协程，等待 isDiceRolled 变成 true
         yield return new WaitUntil(() => isDiceRolled);
 
         // 【第三步：角色移动】
@@ -252,7 +249,9 @@ public class TurnManager : MonoBehaviour
         this.TriggerEvent(EventName.ShowDiceAnimation, new DiceAnimationEventArgs { result = result });
     }
 
-    // 释放投骰子卡点公开的方法
+    /// <summary>
+    /// 释放投骰子卡点
+    /// </summary>
     public void SetDiceRolled()
     {
         isDiceRolled = true;
@@ -309,9 +308,7 @@ public class TurnManager : MonoBehaviour
         return count;
     }
 
-    /// <summary>
-    /// 计算获胜者逻辑
-    /// </summary>
+    // 计算获胜者逻辑
     private PlayerController GetWinner()
     {
         PlayerController bestPlayer = null;
@@ -344,9 +341,7 @@ public class TurnManager : MonoBehaviour
         return bestPlayer;
     }
 
-    /// <summary>
-    /// 显示游戏结束UI
-    /// </summary>
+    // 显示游戏结束UI
     private void ShowGameOverUI(PlayerController winner)
     {
         if (gameOverPanel != null)

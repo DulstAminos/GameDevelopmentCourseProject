@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 随机事件枚举
+/// </summary>
 public enum RandomEventType
 {
     None,           // 0.无事发生
@@ -22,6 +25,10 @@ public class EventCardWeight
     public int countInDeck; // 在牌库中的数量（控制概率）
 }
 
+/// <summary>
+/// 随机事件管理器
+/// </summary>
+/// <remarks>采取牌库抽卡的策略进行概论控制和随机选取</remarks>
 public class RandomEventManager : MonoBehaviour
 {
     public static RandomEventManager Instance { get; private set; }
@@ -64,7 +71,7 @@ public class RandomEventManager : MonoBehaviour
         int randIndex = UnityEngine.Random.Range(0, drawPool.Count);
         RandomEventType drawnEvent = drawPool[randIndex];
 
-        // 触发事件音效
+        // 触发事件音效，分好坏
         if (GoodEvents.Contains(drawnEvent))
         {
             this.TriggerEvent(EventName.PlaySFX, new SFXEventArgs { sfxType = SoundEffectType.GoodEvent });
@@ -77,6 +84,7 @@ public class RandomEventManager : MonoBehaviour
         ExecuteEvent(player, drawnEvent, onComplete);
     }
 
+    // 执行随机事件相关逻辑
     private void ExecuteEvent(PlayerController player, RandomEventType type, Action onComplete)
     {
         string title = "随机事件";
@@ -165,9 +173,10 @@ public class RandomEventManager : MonoBehaviour
         }
     }
 
+    // 辅助方法：查找煤矿格
     private int FindNearestCoalIndex(int currentIndex)
     {
-        // 简易遍历查找最近的 CoalGrid
+        // 简易遍历查找
         int minDistance = 999;
         int targetIndex = currentIndex;
         MapManager map = MapManager.Instance;

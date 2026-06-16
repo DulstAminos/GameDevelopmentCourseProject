@@ -2,13 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// 音效与音乐枚举
+/// <summary>
+/// 音乐枚举
+/// </summary>
 public enum MusicType
 {
     MainMenu,   // 主菜单音乐
     Gameplay    // 游玩音乐
 }
 
+/// <summary>
+/// 音效枚举
+/// </summary>
 public enum SoundEffectType
 {
     RollDice,       // 投骰子
@@ -24,6 +29,9 @@ public enum SoundEffectType
     Mining          // 挖煤
 }
 
+/// <summary>
+/// 音乐与音效管理器
+/// </summary>
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance { get; private set; }
@@ -82,7 +90,7 @@ public class AudioManager : MonoBehaviour
         EventManager.Instance.RemoveListener(EventName.StopMoveSFX, OnStopMoveSFX);
     }
 
-    // 事件响应方法
+    #region 事件响应方法
     private void OnPlayMusic(object sender, EventArgs e)
     {
         var args = e as MusicEventArgs;
@@ -125,4 +133,5 @@ public class AudioManager : MonoBehaviour
             moveSfxSource.Stop();
         }
     }
+    #endregion
 }

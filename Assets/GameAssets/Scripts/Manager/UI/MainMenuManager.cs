@@ -2,9 +2,13 @@
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+/// <summary>
+/// 主菜单UI管理器
+/// </summary>
 public class MainMenuManager : MonoBehaviour
 {
-    public enum MenuState { Start, LevelSelect, CharacterSelect }
+    // 主菜单状态枚举
+    private enum MenuState { Start, LevelSelect, CharacterSelect }
     private MenuState currentState = MenuState.Start;
 
     [Header("UI Panels")]

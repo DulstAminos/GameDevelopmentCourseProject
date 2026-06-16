@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// 煤矿格控制器
+/// </summary>
 public class CoalGrid : GridController
 {
     public override void OnArrived(PlayerController player)

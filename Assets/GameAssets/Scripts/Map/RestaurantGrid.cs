@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// 饭店格控制器
+/// </summary>
 public class RestaurantGrid : GridController
 {
     [Header("饭店基础信息")]
@@ -48,9 +51,7 @@ public class RestaurantGrid : GridController
         UpdateVisual();
     }
 
-    /// <summary>
-    /// 初始化时生成建筑和食物模型
-    /// </summary>
+    // 初始化时生成建筑和食物模型
     private void InstantiateModels()
     {
         if (spawnPoints == null || spawnPoints.Length == 0 || selectedSpawnIndex >= spawnPoints.Length)
@@ -79,26 +80,14 @@ public class RestaurantGrid : GridController
 
     public override void OnArrived(PlayerController player)
     {
-        if (level == 0)
+        // 停在别人饭店，交过路费
+        if (level != 0 && owner != null && owner != player)
         {
-            Debug.Log($"【空地】{player.playerName} 停在了无主空地上。");
-        }
-        else if (owner == null)
-        {
-            // 中立饭店逻辑
-            Debug.Log($"【中立饭店】{player.playerName} 停在了中立的 {level} 级饭店，可花钱消费。");
-        }
-        else if (owner != player)
-        {
-            Debug.Log($"【别人饭店】{player.playerName} 停在了 {owner.playerName} 的 {level} 级饭店。");
             PayToll(player);
-        }
-        else
-        {
-            Debug.Log($"【自己饭店】{player.playerName} 停在了自己的 {level} 级饭店。");
         }
     }
 
+    // 支付过路费
     private void PayToll(PlayerController player)
     {
         if (level < 1 || level > 3) return;
@@ -125,7 +114,9 @@ public class RestaurantGrid : GridController
         }
     }
 
-    // 供外部调用的升级/建造方法
+    /// <summary>
+    /// 饭店格的升级/建造公共方法
+    /// </summary>
     public void UpgradeOrBuild(PlayerController newOwner)
     {
         this.TriggerEvent(EventName.PlaySFX, new SFXEventArgs { sfxType = SoundEffectType.Upgrade }); // 升级音效
@@ -134,7 +125,9 @@ public class RestaurantGrid : GridController
         UpdateVisual();
     }
 
-    // 店主赚钱
+    /// <summary>
+    /// 店主赚钱
+    /// </summary>
     public void OwnerMakeMoney(int money)
     {
         if (owner == null) return;

@@ -8,6 +8,9 @@ public enum PlayerState
     Dead        // 死亡淘汰
 }
 
+/// <summary>
+/// 角色枚举
+/// </summary>
 public enum CharacterRole
 {
     Boy,        // 年轻男孩 (初始/最大体力更高)

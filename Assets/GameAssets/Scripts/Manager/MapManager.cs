@@ -10,22 +10,17 @@ public class MapManager : MonoBehaviour
     // 单例
     public static MapManager Instance { get; private set; }
 
-    [Header("地图数据")]
     // 存储环形地图所有格子的列表
+    [Header("地图数据")]
     public List<GridController> gridList = new List<GridController>();
 
     private void Awake()
     {
         // 确保场景中只有一个实例
         if (Instance == null)
-        {
             Instance = this;
-        }
         else
-        {
-            Debug.LogWarning("场景中存在多个MapManager，已销毁多余的实例。");
             Destroy(gameObject);
-        }
 
         // 注册监听器
         EventManager.Instance.AddListener(EventName.OnPlayerPassedGrid, OnPlayerPassedGridHandler);
@@ -42,7 +37,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    // 事件处理逻辑
+    #region 事件处理逻辑
     private void OnPlayerPassedGridHandler(object sender, EventArgs e)
     {
         var args = e as GridInteractionEventArgs;
@@ -62,6 +57,7 @@ public class MapManager : MonoBehaviour
             gridList[args.gridIndex].OnArrived(args.player);
         }
     }
+    #endregion
 
     /// <summary>
     /// 获取移动后的目标格子索引
@@ -73,7 +69,7 @@ public class MapManager : MonoBehaviour
             Debug.LogError("MapManager 的 gridList 为空！请在面板中配置格子！");
             return 0;
         }
-        // 环形求余算法：走到末尾自动绕回起点
+        // 走到末尾自动绕回起点
         return (currentIndex + steps) % gridList.Count;
     }
 

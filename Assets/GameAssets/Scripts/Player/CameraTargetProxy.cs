@@ -1,6 +1,9 @@
 ﻿using System;
 using UnityEngine;
 
+/// <summary>
+/// 摄像头跟踪目标脚本
+/// </summary>
 public class CameraTargetProxy : MonoBehaviour
 {
     [Header("高度配置")]

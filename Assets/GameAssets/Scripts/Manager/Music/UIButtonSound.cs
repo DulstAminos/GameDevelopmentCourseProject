@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// 按钮点击音效脚本
+/// </summary>
 [RequireComponent(typeof(Button))]
 public class UIButtonSound : MonoBehaviour
 {
